@@ -6507,7 +6507,22 @@ SumExpr:
 	}
 |	builtinApproxPercentile '(' ExpressionList ')'
 	{
-		$$ = &ast.AggregateFuncExpr{F: $1, Args: $3.([]ast.ExprNode)}
+		args := $3.([]ast.ExprNode)
+		if len(args) < 2 {
+			yylex.AppendError(ErrWrongArguments.GenWithStackByArgs("APPROX_PERCENTILE"))
+		}
+		value, ok := args[1].(ast.ValueExpr)
+		if ok {
+			switch percentage := value.GetValue().(type) {
+				
+			}
+			if percentage >= 100 || percentage < 0 {
+				yylex.AppendError(ErrWrongArguments.GenWithStackByArgs("APPROX_PERCENTILE"))
+			}
+		} else {
+			yylex.AppendError(ErrWrongArguments.GenWithStackByArgs("APPROX_PERCENTILE"))
+		}
+		$$ = &ast.AggregateFuncExpr{F: $1, Args: args}
 	}
 |	builtinBitAnd '(' Expression ')' OptWindowingClause
 	{
